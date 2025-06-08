@@ -7,13 +7,13 @@ ARQUIVO_DADOS = 'dados.json'
 
 def carregar_dados():
     if os.path.exists(ARQUIVO_DADOS):
-        with open(ARQUIVO_DADOS, 'r') as f:
+        with open(ARQUIVO_DADOS, 'r') as f: # abre o arquivo em modo de leitura
             return json.load(f)
     return []
 
 def salvar_dados(dados):
-    with open(ARQUIVO_DADOS, 'w') as f:
-        json.dump(dados, f, indent=4)
+    with open(ARQUIVO_DADOS, 'w') as f: # abre o arquivo em modo de escrita
+        json.dump(dados, f, indent=4) # salva os dados no formato JSON com indentação para facilitar a leitura
 
 
 def cadastrar_novo_recurso(nome, unidade, quantidade):
@@ -30,7 +30,7 @@ def cadastrar_novo_recurso(nome, unidade, quantidade):
 
 def adicionar_quantidade(indice, quantidade):
     dados = carregar_dados()
-    if indice < 0 or indice >= len(dados):
+    if indice < 0 or indice >= len(dados): # evita erro ao acessar índices fora da lista
         return "Índice inválido."
     recurso = dados[indice]
     recurso["quantidade"] += quantidade
@@ -44,7 +44,7 @@ def remover_quantidade(indice, quantidade):
         return "Índice inválido."
     recurso = dados[indice]
     if quantidade > recurso["quantidade"]:
-        return "Quantidade maior do que a disponível."
+        return "Quantidade maior do que a disponível." # evita que a quantidade fique negativa
     recurso["quantidade"] -= quantidade
     recurso["historico"].append({"quantidade": -quantidade, "data": datetime.now().isoformat()})
     salvar_dados(dados)
@@ -57,19 +57,21 @@ def gerar_grafico(tipo):
     dados = carregar_dados()
     if not dados:
         return "Sem dados para o gráfico."
-    if tipo == 'linha':
+    #gráfico de linha com evolução temporal dos recursos
+    if tipo == 'linha': 
         for item in dados:
-            hist = sorted(item.get("historico", []), key=lambda x: x["data"])
+            hist = sorted(item.get("historico", []), key=lambda x: x["data"]) # ordena o histórico por data
             datas = [datetime.fromisoformat(i["data"]) for i in hist]
             cumul = 0
             vals = []
             for i in hist:
                 cumul += i["quantidade"]
-                vals.append(cumul)
+                vals.append(cumul) # recria a curva cumulativa
             plt.plot(datas, vals, label=f"{item['nome']} ({item.get('unidade','')})")
         plt.xlabel("Data")
         plt.ylabel("Quantidade")
         plt.title("Histórico de Recursos")
+         # Gráfico de barras com quantidades atuais de cada recurso
     elif tipo == 'barras':
         nomes = [f"{i['nome']} ({i['unidade']})" for i in dados]
         vals = [i['quantidade'] for i in dados]
@@ -78,6 +80,7 @@ def gerar_grafico(tipo):
         plt.ylabel("Quantidade")
         plt.title("Totais por Recurso")
         plt.xticks(rotation=30)
+        #Gráfico com objetivo de visualiazar a distribuição entre os recursos
     elif tipo == 'pizza':
         nomes = [f"{i['nome']} ({i['unidade']})" for i in dados]
         vals = [i['quantidade'] for i in dados]
@@ -113,7 +116,8 @@ def menu():
                 continue
             msg = cadastrar_novo_recurso(nome, uni, qt)
             print(msg)
-
+            
+        #Duas opções abstraídas em um elif só pela semelhança (não redundância)
         elif opc in ('2', '3'):
             recursos = listar_recursos()
             if not recursos:
@@ -144,7 +148,9 @@ def menu():
         elif opc == '5':
             print("Tipos de gráfico: 1: Linha 2: Barras 3: Pizza")
             t = input("Escolha: ")
-            tipos = {'1':'linha','2':'barras','3':'pizza'}
+            tipos = {'1':'linha',
+                     '2':'barras',
+                     '3':'pizza'}
             if t in tipos:
                 msg = gerar_grafico(tipos[t])
                 print(msg)
